@@ -10,10 +10,15 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@heroui/skeleton": "^2.2.6",
     "@repo/ui": "*",
+    "lucide-react": "^0.473.0",
     "next": "^14.2.3",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-loading-skeleton": "^3.5.0"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^14.2.3",
@@ -29,3 +34,4 @@
     "typescript": "5.5.4"
   }
 }
+

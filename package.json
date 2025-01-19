@@ -23,8 +23,11 @@
     "packages/*"
   ],
   "dependencies": {
+    "@mui/material": "^6.4.0",
+    "@mui/styled-engine-sc": "^6.4.0",
     "@prisma/client": "^6.2.1",
     "prisma": "^6.2.1",
-    "puppeteer": "^24.1.0"
+    "puppeteer": "^24.1.0",
+    "styled-components": "^6.1.14"
   }
 }
