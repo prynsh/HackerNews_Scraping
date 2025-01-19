@@ -1,58 +1,86 @@
-# Turborepo Tailwind CSS starter
+# Hacker News Live Feed
 
-This Turborepo starter is maintained by the Turborepo core team.
+## Overview
+Hacker News Live Feed is a web application that scrapes the latest articles from Hacker News, stores them in a database, and serves real-time updates through WebSocket and REST APIs. The application includes a live front-end dashboard to display the latest articles with updates every 5 minutes.
 
-## Using this example
+## Features
+- **Scraper**: Automatically scrapes the newest articles from Hacker News using Puppeteer.
+- **Database**: Stores scraped data using Prisma and a connected MySQL database.
+- **WebSocket Server**: Sends real-time updates to clients every 5 minutes.
+- **REST API**: Provides server status.
+- **Front-End Dashboard**: A Responsive dashboard displaying articles with real-time updates and initial article count.
 
-Run the following command:
+## Tech Stack
+- **Back-End**: Node.js, Puppeteer, Prisma, Express, WebSocket
+- **Front-End**: React, Material-UI
+- **Database**: MySQL (along with Prisma)
+- **Tools**: Puppeteer for web scraping, Prisma ORM for database management
 
-```sh
-npx create-turbo@latest -e with-tailwind
+---
+
+## Setup Instructions
+
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v16 or later)
+- SQL Database (MySQL, available for free from [Aiven.io](https://aiven.io/))
+- [Git](https://git-scm.com/)
+
+### Installation
+
+1. **Clone the repository**:
+    ```bash
+    git clone https://github.com/prynsh/HackerNews_Scraping.git
+    cd HackerNews_Scraping
+    ```
+
+2. **Install dependencies**:
+
+    Navigate to the server and web directories and install dependencies:
+    ```bash
+    cd apps/server && npm install
+    cd apps/web && npm install
+    cd ..
+    npm install
+    ```
+
+3. **Setup the database**:
+    - Ensure your database is running.
+    - Create a top level `.env` file and configure the database connection in the `.env` file:
+      ```env
+      DATABASE_URL="your-database-connection-string"
+      ```
+    - Apply the Prisma schema:
+      ```bash
+      npx prisma migrate dev --name init
+      ```
+
+4. **Start the server**:
+
+    Run the following command to start both the backend and frontend:
+    ```bash
+    npm run dev
+    ```
+
+    After starting the application, visit `http://localhost:3000` to view the front-end dashboard.
+
+---
+
+## API Usage
+
+### REST API
+
+#### `GET /status`
+Returns the server status:
+```json
+{
+  "status": "ok",
+  "message": "WebSocket server is running on ws://localhost:3001"
+}
 ```
+### WebSocket API
 
-## What's inside?
+**Connection URL**: ws://localhost:3001
 
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app with [Tailwind CSS](https://tailwindcss.com/)
-- `web`: another [Next.js](https://nextjs.org/) app with [Tailwind CSS](https://tailwindcss.com/)
-- `ui`: a stub React component library with [Tailwind CSS](https://tailwindcss.com/) shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Building packages/ui
-
-This example is set up to produce compiled styles for `ui` components into the `dist` directory. The component `.tsx` files are consumed by the Next.js apps directly using `transpilePackages` in `next.config.js`. This was chosen for several reasons:
-
-- Make sharing one `tailwind.config.js` to apps and packages as easy as possible.
-- Make package compilation simple by only depending on the Next.js Compiler and `tailwindcss`.
-- Ensure Tailwind classes do not overwrite each other. The `ui` package uses a `ui-` prefix for it's classes.
-- Maintain clear package export boundaries.
-
-Another option is to consume `packages/ui` directly from source without building. If using this option, you will need to update the `tailwind.config.js` in your apps to be aware of your package locations, so it can find all usages of the `tailwindcss` class names for CSS compilation.
-
-For example, in [tailwind.config.js](packages/tailwind-config/tailwind.config.js):
-
-```js
-  content: [
-    // app content
-    `src/**/*.{js,ts,jsx,tsx}`,
-    // include packages if not transpiling
-    "../../packages/ui/*.{js,ts,jsx,tsx}",
-  ],
-```
-
-If you choose this strategy, you can remove the `tailwindcss` and `autoprefixer` dependencies from the `ui` package.
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [Tailwind CSS](https://tailwindcss.com/) for styles
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+**Message Types**:
+- **initialData**: Contains articles from the last 5 minutes and their count.
+- **articleUpdate**: Sends the latest articles every 5 minutes.
