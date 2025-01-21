@@ -1,5 +1,5 @@
 import React from "react";
-import HackerNewsBoard from "./components/newsBoard";
+import HackerNewsBoard from "./components/news-board";
 
 
 export default function Page(): JSX.Element {

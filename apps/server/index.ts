@@ -25,12 +25,12 @@ wss.on('connection', async (ws) => {
       const fiveMinutesAgo = subMinutes(new Date(), 5);
       const recentArticles = await prisma.article.findMany({
         where: {
-          createdAt: {
+          publishedAt: {
             gte: fiveMinutesAgo,
           },
         },
         orderBy: {
-          createdAt: 'desc'
+          publishedAt: 'desc'
         },
       });
 
@@ -58,12 +58,12 @@ wss.on('connection', async (ws) => {
       const fiveMinutesAgo = subMinutes(new Date(), 5);
       const recentArticles = await prisma.article.findMany({
         where: {
-          createdAt: {
+          publishedAt: {
             gte: fiveMinutesAgo,
           },
         },
         orderBy: {
-          createdAt: 'desc'
+          publishedAt: 'desc'
         },
       });
 

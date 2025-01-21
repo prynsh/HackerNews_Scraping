@@ -14,9 +14,9 @@ datasource db {
 }
 
 model Article {
-  id     Int    @id @default(autoincrement())
-  title  String
-  link   String @unique
-  score  String
-  createdAt DateTime @default(now())
+  id          Int    @id @default(autoincrement())
+  title       String
+  link        String @unique
+  score       String
+  publishedAt DateTime
 }

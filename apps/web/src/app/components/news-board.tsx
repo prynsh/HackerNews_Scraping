@@ -7,6 +7,7 @@ interface Article {
   title: string;
   link: string;
   score: string;
+  publishedAt: string;
 }
 
 interface WebSocketMessage {
@@ -50,7 +51,6 @@ export default function HackerNewsBoard() {
             case 'initialData':
               if (data.recentArticles) {
                 setArticles(data.recentArticles);
-                // Only set the initial count once when first receiving the data
                 if (!initialDataReceived) {
                   setInitialArticleCount(data.recentArticlesCount || data.recentArticles.length);
                   setInitialDataReceived(true);
@@ -61,7 +61,11 @@ export default function HackerNewsBoard() {
             
             case 'articleUpdate':
               if (data.articles) {
-                setArticles(data.articles);
+                const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+                const filteredArticles = data.articles.filter((article) =>
+                  new Date(article.publishedAt) > fiveMinutesAgo
+                );
+                setArticles(filteredArticles);
                 setLoading(false);
               }
               break;
@@ -78,8 +82,7 @@ export default function HackerNewsBoard() {
       socket.onclose = () => {
         setStatus('Disconnected');
         setWs(null);
-        setInitialDataReceived(false);
-        setTimeout(connect, 3000);
+        setTimeout(connect, 1000);
       };
 
       socket.onerror = () => {
@@ -176,14 +179,14 @@ export default function HackerNewsBoard() {
                 </a>
               </h3>
               <div className="flex items-center gap-4 text-sm text-gray-500">
-                <span className="flex items-center gap-1">
-                  <span className="inline-block w-4 h-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                    </svg>
-                  </span>
-                  {article.score.replace(' points', '')}
+              <span className="flex items-center gap-1">
+                <span className="inline-block w-4 h-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                  </svg>
                 </span>
+              {article.score.replace(' points', '')}</span>
+                <span>Published: {new Date(article.publishedAt).toLocaleTimeString()}</span>
                 <span className="flex items-center gap-1">
                   <span className="inline-block w-4 h-4">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
