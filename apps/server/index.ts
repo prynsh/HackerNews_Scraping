@@ -3,6 +3,7 @@ import { WebSocketServer } from 'ws';
 import { PrismaClient } from '@prisma/client';
 import { createServer } from 'http';
 import { scrapeHackerNews } from './services/scraper';
+import { subMinutes } from 'date-fns'; 
 
 const app = express();
 const prisma = new PrismaClient();
@@ -19,28 +20,67 @@ httpServer.on('upgrade', (request, socket, head) => {
 wss.on('connection', async (ws) => {
   console.log('Client connected');
 
-  const sendUpdates = async () => {
+  const getInitialData = async () => {
+    try {
+      const fiveMinutesAgo = subMinutes(new Date(), 5);
+      const recentArticles = await prisma.article.findMany({
+        where: {
+          createdAt: {
+            gte: fiveMinutesAgo,
+          },
+        },
+        orderBy: {
+          createdAt: 'desc'
+        },
+      });
+
+      // console.log(Initial count of articles from last 5 minutes: ${recentArticles.length});
+    
+      ws.send(JSON.stringify({
+        type: 'initialData',
+        recentArticles: recentArticles,
+        recentArticlesCount: recentArticles.length,
+      }));
+    } catch (error) {
+      console.error('Error getting initial data:', error);
+    }
+  };
+
+  const sendArticleUpdates = async () => {
     try {
       const articles = await scrapeHackerNews();
-
+      
       if (!articles || articles.length === 0) {
         console.log('No new articles to send.');
         return;
       }
-      const storedArticles = await prisma.article.findMany();
-      if (storedArticles && storedArticles.length > 0) {
-        ws.send(JSON.stringify(storedArticles)); 
-      } else {
-        console.log('No articles found in the database.');
-      }
+
+      const fiveMinutesAgo = subMinutes(new Date(), 5);
+      const recentArticles = await prisma.article.findMany({
+        where: {
+          createdAt: {
+            gte: fiveMinutesAgo,
+          },
+        },
+        orderBy: {
+          createdAt: 'desc'
+        },
+      });
+
+      ws.send(JSON.stringify({
+        type: 'articleUpdate',
+        articles: recentArticles,
+      }));
 
     } catch (error) {
-      console.error('Error sending updates:', error);
+      console.error('Error sending article updates:', error);
     }
   };
 
-  const interval = setInterval(sendUpdates, 50000);
-  sendUpdates();
+  await getInitialData();
+
+  const interval = setInterval(sendArticleUpdates, 300000); 
+  sendArticleUpdates(); 
 
   ws.on('close', () => {
     console.log('Client disconnected');

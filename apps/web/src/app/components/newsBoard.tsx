@@ -3,11 +3,17 @@
 import { LinearProgress } from '@mui/material';
 import React, { useEffect, useState, useCallback } from 'react';
 
-
 interface Article {
   title: string;
   link: string;
   score: string;
+}
+
+interface WebSocketMessage {
+  type: 'initialData' | 'articleUpdate';
+  articles?: Article[];
+  recentArticles?: Article[];
+  recentArticlesCount?: number;
 }
 
 export default function HackerNewsBoard() {
@@ -15,9 +21,11 @@ export default function HackerNewsBoard() {
   const [status, setStatus] = useState<string>('Loading your Articles...');
   const [error, setError] = useState<string>('');
   const [ws, setWs] = useState<WebSocket | null>(null);
-  const [loading, setLoading] = useState<boolean>(true); 
-  const [progress, setProgress] = useState<number>(10);  
-  const [buffer, setBuffer] = useState<number>(30); 
+  const [loading, setLoading] = useState<boolean>(true);
+  const [progress, setProgress] = useState<number>(10);
+  const [buffer, setBuffer] = useState<number>(30);
+  const [initialArticleCount, setInitialArticleCount] = useState<number>(0);
+  const [initialDataReceived, setInitialDataReceived] = useState<boolean>(false);
 
   const connect = useCallback(async () => {
     try {
@@ -36,17 +44,41 @@ export default function HackerNewsBoard() {
 
       socket.onmessage = (event) => {
         try {
-          const data = JSON.parse(event.data);
-          setArticles(data);
-          setLoading(false);  
-        } catch {
+          const data: WebSocketMessage = JSON.parse(event.data);
+          
+          switch (data.type) {
+            case 'initialData':
+              if (data.recentArticles) {
+                setArticles(data.recentArticles);
+                // Only set the initial count once when first receiving the data
+                if (!initialDataReceived) {
+                  setInitialArticleCount(data.recentArticlesCount || data.recentArticles.length);
+                  setInitialDataReceived(true);
+                }
+                setLoading(false);
+              }
+              break;
+            
+            case 'articleUpdate':
+              if (data.articles) {
+                setArticles(data.articles);
+                setLoading(false);
+              }
+              break;
+            
+            default:
+              console.warn('Unknown message type received:', data);
+          }
+        } catch (error) {
           setError('Error parsing data from server');
+          console.error('WebSocket message parsing error:', error);
         }
       };
 
       socket.onclose = () => {
         setStatus('Disconnected');
         setWs(null);
+        setInitialDataReceived(false);
         setTimeout(connect, 3000);
       };
 
@@ -60,7 +92,7 @@ export default function HackerNewsBoard() {
       setError(error instanceof Error ? error.message : 'Failed to connect');
       setTimeout(connect, 3000);
     }
-  }, []);
+  }, [initialDataReceived]);
 
   useEffect(() => {
     const progressInterval = setInterval(() => {
@@ -101,7 +133,7 @@ export default function HackerNewsBoard() {
           <h1 className="text-xl font-semibold">HackerNews Live Feed</h1>
           <div className="flex flex-col items-end">
             <span className={`text-sm ${
-              status === 'Connected' ? 'text-green-600 ' : 
+              status === 'Connected' ? 'text-green-600' : 
               status === 'Disconnected' ? 'text-red-600' : 
               'text-gray-500'
             }`}>
@@ -110,7 +142,11 @@ export default function HackerNewsBoard() {
             {error && <span className="text-xs text-red-500 mt-1">{error}</span>}
           </div>
         </div>
+        <div className="text-sm text-gray-500 mt-2">
+          Initial articles since last connection: <strong>{initialArticleCount}</strong>
+        </div>
       </div>
+
       {loading ? (
         <div className="flex justify-center items-center h-screen">
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1/2">
@@ -145,7 +181,6 @@ export default function HackerNewsBoard() {
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
                     </svg>
-
                   </span>
                   {article.score.replace(' points', '')}
                 </span>
