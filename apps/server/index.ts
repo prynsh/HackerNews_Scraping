@@ -22,6 +22,8 @@ wss.on('connection', async (ws) => {
 
   const getInitialData = async () => {
     try {
+      await scrapeHackerNews();
+
       const fiveMinutesAgo = subMinutes(new Date(), 5);
       const recentArticles = await prisma.article.findMany({
         where: {
@@ -34,7 +36,7 @@ wss.on('connection', async (ws) => {
         },
       });
 
-      // console.log(Initial count of articles from last 5 minutes: ${recentArticles.length});
+      console.log(`Initial count of articles from last 5 minutes: ${recentArticles.length}`);
     
       ws.send(JSON.stringify({
         type: 'initialData',
