@@ -53,7 +53,10 @@ export const scrapeHackerNews = async (): Promise<Article[]> => {
   let browser: Browser | null = null;
 
   try {
-    browser = await puppeteer.launch({ headless: true });
+    browser = await puppeteer.launch({ headless: true,
+      args: ["--no-sandbox","--disable-setuid-sandbox"
+      ]
+     });
     const page: Page = await browser.newPage();
 
     await page.goto('https://news.ycombinator.com/newest', {
