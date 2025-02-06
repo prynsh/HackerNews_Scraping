@@ -7,6 +7,7 @@ import { subMinutes } from 'date-fns';
 
 const app = express();
 const prisma = new PrismaClient();
+const port = process.env.PORT || 3001;
 
 let httpServer = createServer(app);
 const wss = new WebSocketServer({ noServer: true });
@@ -102,7 +103,6 @@ app.get('/status', (req, res) => {
   });
 });
 
-const PORT = 3001;
-httpServer.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+httpServer.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
