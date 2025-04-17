@@ -1,9 +1,9 @@
 import express from 'express';
-import { WebSocketServer } from 'ws';
+import { WebSocket, WebSocketServer } from 'ws';
 import { PrismaClient } from '@prisma/client';
 import { createServer } from 'http';
 import { scrapeHackerNews } from './services/scraper';
-import { subMinutes } from 'date-fns'; 
+import { subMinutes } from 'date-fns';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -18,72 +18,73 @@ httpServer.on('upgrade', (request, socket, head) => {
   });
 });
 
+
+const getInitialData = async (ws:WebSocket) => {
+  try {
+    await scrapeHackerNews();
+
+    const fiveMinutesAgo = subMinutes(new Date(), 5);
+    const recentArticles = await prisma.article.findMany({
+      where: {
+        publishedAt: {
+          gte: fiveMinutesAgo,
+        },
+      },
+      orderBy: {
+        publishedAt: 'desc'
+      },
+    });
+
+    console.log(`Initial count of articles from last 5 minutes: ${recentArticles.length}`);
+
+    ws.send(JSON.stringify({
+      type: 'initialData',
+      recentArticles: recentArticles,
+      recentArticlesCount: recentArticles.length,
+    }));
+  } catch (error) {
+    console.error('Error getting initial data:', error);
+  }
+};
+
+
+const sendArticleUpdates = async (ws:WebSocket) => {
+  try {
+    const articles = await scrapeHackerNews();
+
+    if (!articles || articles.length === 0) {
+      console.log('No new articles to send.');
+      return;
+    }
+
+    const fiveMinutesAgo = subMinutes(new Date(), 5);
+    const recentArticles = await prisma.article.findMany({
+      where: {
+        publishedAt: {
+          gte: fiveMinutesAgo,
+        },
+      },
+      orderBy: {
+        publishedAt: 'desc'
+      },
+    });
+
+    ws.send(JSON.stringify({
+      type: 'articleUpdate',
+      articles: recentArticles,
+    }));
+
+  } catch (error) {
+    console.error('Error sending article updates:', error);
+  }
+};
 wss.on('connection', async (ws) => {
   console.log('Client connected');
 
-  const getInitialData = async () => {
-    try {
-      await scrapeHackerNews();
+  await getInitialData(ws);
 
-      const fiveMinutesAgo = subMinutes(new Date(), 5);
-      const recentArticles = await prisma.article.findMany({
-        where: {
-          publishedAt: {
-            gte: fiveMinutesAgo,
-          },
-        },
-        orderBy: {
-          publishedAt: 'desc'
-        },
-      });
-
-      console.log(`Initial count of articles from last 5 minutes: ${recentArticles.length}`);
-    
-      ws.send(JSON.stringify({
-        type: 'initialData',
-        recentArticles: recentArticles,
-        recentArticlesCount: recentArticles.length,
-      }));
-    } catch (error) {
-      console.error('Error getting initial data:', error);
-    }
-  };
-
-  const sendArticleUpdates = async () => {
-    try {
-      const articles = await scrapeHackerNews();
-      
-      if (!articles || articles.length === 0) {
-        console.log('No new articles to send.');
-        return;
-      }
-
-      const fiveMinutesAgo = subMinutes(new Date(), 5);
-      const recentArticles = await prisma.article.findMany({
-        where: {
-          publishedAt: {
-            gte: fiveMinutesAgo,
-          },
-        },
-        orderBy: {
-          publishedAt: 'desc'
-        },
-      });
-
-      ws.send(JSON.stringify({
-        type: 'articleUpdate',
-        articles: recentArticles,
-      }));
-
-    } catch (error) {
-      console.error('Error sending article updates:', error);
-    }
-  };
-
-  await getInitialData();
-
-  const interval = setInterval(sendArticleUpdates, 300000); 
-  sendArticleUpdates(); 
+  const interval = setInterval(() => sendArticleUpdates(ws), 300000);
+  sendArticleUpdates(ws);
 
   ws.on('close', () => {
     console.log('Client disconnected');
@@ -96,10 +97,11 @@ wss.on('connection', async (ws) => {
   });
 });
 
+
 app.get('/status', (req, res) => {
-  res.json({ 
+  res.json({
     status: 'ok',
-    message: 'WebSocket server is running on ws://localhost:3001' 
+    message: 'WebSocket server is running on ws://localhost:3001'
   });
 });
 

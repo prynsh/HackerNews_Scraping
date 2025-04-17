@@ -1,7 +1,6 @@
 'use client';
 
-import { LinearProgress } from '@mui/material';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 
 interface Article {
   title: string;
@@ -19,115 +18,64 @@ interface WebSocketMessage {
 
 export default function HackerNewsBoard() {
   const [articles, setArticles] = useState<Article[]>([]);
-  const [status, setStatus] = useState<string>('Loading your Articles...');
-  const [error, setError] = useState<string>('');
-  const [ws, setWs] = useState<WebSocket | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [progress, setProgress] = useState<number>(10);
-  const [buffer, setBuffer] = useState<number>(30);
-  const [initialArticleCount, setInitialArticleCount] = useState<number>(0);
-  const [initialDataReceived, setInitialDataReceived] = useState<boolean>(false);
+  const wsRef = useRef<WebSocket | null>(null);
 
-  const connect = useCallback(async () => {
-    try {
-      const response = await fetch('/');
-      if (!response.ok) {
-        throw new Error('Failed to start WebSocket server');
+  const connect = useCallback(() => {
+    console.log("WebSocket connecting...");
+    const socket = new WebSocket('ws://localhost:3001');
+    wsRef.current = socket;
+
+    socket.onopen = () => {
+      console.log("WebSocket connected");
+    };
+
+    socket.onmessage = (event) => {
+      try {
+        const data: WebSocketMessage = JSON.parse(event.data);
+        switch (data.type) {
+          case 'initialData':
+            if (data.recentArticles) {
+              setArticles(data.recentArticles);
+              setLoading(false);
+            }
+            break;
+          case 'articleUpdate':
+            if (data.articles) {
+              const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+              const filteredArticles = data.articles.filter(
+                (article) => new Date(article.publishedAt) > fiveMinutesAgo
+              );
+              setArticles(filteredArticles);
+              setLoading(false);
+            }
+            break;
+          default:
+            console.warn('Unknown message type received:', data);
+        }
+      } catch (error) {
+        console.error('WebSocket message parsing error:', error);
       }
+    };
 
-      const socket = new WebSocket('ws://localhost:3001');
-      setWs(socket);
+    socket.onclose = () => {
+      console.log("WebSocket disconnected, reconnecting...");
+      setTimeout(connect, 1000);
+    };
 
-      socket.onopen = () => {
-        setStatus('Connected');
-        setError('');
-      };
-
-      socket.onmessage = (event) => {
-        try {
-          const data: WebSocketMessage = JSON.parse(event.data);
-          
-          switch (data.type) {
-            case 'initialData':
-              if (data.recentArticles) {
-                setArticles(data.recentArticles);
-                if (!initialDataReceived) {
-                  setInitialArticleCount(data.recentArticlesCount || data.recentArticles.length);
-                  setInitialDataReceived(true);
-                }
-                setLoading(false);
-              }
-              break;
-            
-            case 'articleUpdate':
-              if (data.articles) {
-                const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-                const filteredArticles = data.articles.filter((article) =>
-                  new Date(article.publishedAt) > fiveMinutesAgo
-                );
-                setArticles(filteredArticles);
-                setLoading(false);
-              }
-              break;
-            
-            default:
-              console.warn('Unknown message type received:', data);
-          }
-        } catch (error) {
-          setError('Error parsing data from server');
-          console.error('WebSocket message parsing error:', error);
-        }
-      };
-
-      socket.onclose = () => {
-        setStatus('Disconnected');
-        setWs(null);
-        setTimeout(connect, 1000);
-      };
-
-      socket.onerror = () => {
-        setStatus('Error');
-        setError('WebSocket connection error');
-      };
-
-    } catch (error) {
-      setStatus('Error');
-      setError(error instanceof Error ? error.message : 'Failed to connect');
-      setTimeout(connect, 3000);
-    }
-  }, [initialDataReceived]);
-
-  useEffect(() => {
-    const progressInterval = setInterval(() => {
-      setProgress((oldProgress) => {
-        if (oldProgress === 100) {
-          return 0;
-        }
-        return Math.min(oldProgress + 10, 100);
-      });
-
-      setBuffer((oldBuffer) => {
-        if (oldBuffer === 100) {
-          return 30;
-        }
-        return Math.min(oldBuffer + 10, 100);
-      });
-    }, 500);
-
-    return () => {
-      clearInterval(progressInterval);
+    socket.onerror = (err) => {
+      console.error("WebSocket error:", err);
     };
   }, []);
 
   useEffect(() => {
+    console.log("Component mounted");
     connect();
-
     return () => {
-      if (ws) {
-        ws.close();
-      }
+      wsRef.current?.close();
     };
   }, [connect]);
+  
   
   return (
     <div className="container mx-auto px-6 py-8 min-h-screen">
