@@ -128,69 +128,90 @@ export default function HackerNewsBoard() {
       }
     };
   }, [connect]);
-
+  
   return (
-    <div className="container mx-auto p-4">
-      <div className="bg-white rounded-lg shadow-md mb-4 p-4 border border-b">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold">HackerNews Live Feed</h1>
-          <div className="flex flex-col items-end">
-            <span className={`text-sm ${
-              status === 'Connected' ? 'text-green-600' : 
-              status === 'Disconnected' ? 'text-red-600' : 
-              'text-gray-500'
-            }`}>
-              {status}
-            </span>
-            {error && <span className="text-xs text-red-500 mt-1">{error}</span>}
-          </div>
-        </div>
-        <div className="text-sm text-gray-500 mt-2">
-          Initial articles since last connection: <strong>{initialArticleCount}</strong>
-        </div>
-      </div>
-
+    <div className="container mx-auto px-6 py-8 min-h-screen">
       {loading ? (
-        <div className="flex justify-center items-center h-screen">
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1/2">
-            <LinearProgress variant="buffer" value={progress} valueBuffer={buffer} />
-          </div>
-        </div>
+       <div className="flex justify-center items-center min-h-screen">
+       <div className="relative w-[200px] h-[60px] z-[1]">
+         <div className="absolute w-5 h-5 bg-white rounded-full left-[15%] animate-bounce-circle"></div>
+         <div className="absolute w-5 h-5 bg-white rounded-full left-[45%] animate-bounce-circle [animation-delay:0.2s]"></div>
+         <div className="absolute w-5 h-5 bg-white rounded-full right-[15%] animate-bounce-circle [animation-delay:0.3s]"></div>
+   
+         <div className="absolute w-5 h-1 rounded-full bg-black top-[62px] left-[15%] z-[-1] blur-sm animate-shadow-scale"></div>
+         <div className="absolute w-5 h-1 rounded-full bg-black top-[62px] left-[45%] z-[-1] blur-sm animate-shadow-scale [animation-delay:0.2s]"></div>
+         <div className="absolute w-5 h-1 rounded-full bg-black top-[62px] right-[15%] z-[-1] blur-sm animate-shadow-scale [animation-delay:0.3s]"></div>
+       </div>
+     </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
           {articles.map((article, index) => (
-            <div 
-              key={index} 
-              className="bg-white border rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 m-2 mx-8"
+            <div
+              key={index}
+              className="backdrop-blur-lg bg-gradient-to-br from-white/10 to-white/5 dark:from-white/10 dark:to-white/0 border border-white/20 dark:border-white/10 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 p-6"
             >
-              <h3 className="font-medium mb-2 line-clamp-2">
+              <h3 className="text-white font-semibold mb-3 text-lg leading-snug line-clamp-2">
                 <a
                   href={article.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-blue-600 flex items-start gap-2"
+                  className="hover:text-amber-400 flex items-start gap-2"
                 >
                   {article.title}
-                  <span className="inline-block w-4 h-4 mt-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  <span className="inline-block w-4 h-4 mt-1 text-cyan-400">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
                     </svg>
                   </span>
                 </a>
               </h3>
-              <div className="flex items-center gap-4 text-sm text-gray-500">
-              <span className="flex items-center gap-1">
-                <span className="inline-block w-4 h-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                  </svg>
-                </span>
-              {article.score.replace(' points', '')}</span>
-                <span>Published: {new Date(article.publishedAt).toLocaleTimeString()}</span>
+  
+              <div className="flex flex-wrap gap-4 text-sm text-gray-300">
                 <span className="flex items-center gap-1">
-                  <span className="inline-block w-4 h-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <span className="inline-block w-4 h-4 text-yellow-400">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 10l7-7m0 0l7 7m-7-7v18"
+                      />
+                    </svg>
+                  </span>
+                  {article.score.replace(" points", "")}
+                </span>
+  
+                <span>🕒 {new Date(article.publishedAt).toLocaleTimeString()}</span>
+  
+                <span className="flex items-center gap-1">
+                  <span className="inline-block w-4 h-4 text-green-400">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                   </span>
                   Updates every 5 mins
@@ -202,4 +223,6 @@ export default function HackerNewsBoard() {
       )}
     </div>
   );
+  
+
 }
