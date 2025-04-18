@@ -1,35 +1,27 @@
-'use client'
-import React, { useState } from "react";
+import React from "react";
+import { cn } from "../../lib/utils";
 import HackerNewsBoard from "./components/news-board";
-import { Newspaper, ExternalLink, RefreshCw, Loader2 } from 'lucide-react';
-import { DotBackgroundDemo } from "./components/ui/grid-dot-background";
+import Navbar from "./components/Navbar";
 
-
-export default function Page(){
+export default function HomePage() {
   return (
-    <>
-        <DotBackgroundDemo/>
-         {/* <div className="flex justify-between items-center mb-6">
-          <p className="text-sm text-gray-600">
-            Last updated: 
-          </p>
-          <button
-            
-            className="flex items-center gap-2 px-4 py-2 bg-white-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <RefreshCw className="w-4 h-4" />
-            )}
-            Refresh
-          </button>
-        </div> */}
-      {/* <HackerNewsBoard/> */}
-          {/* <div className="text-white flex items-center justify-center w-full h-full text-center">
-      Tired of browsing HackerNews manually?<br />
-      Get the top stories from the last 5 minutes right here — instantly!
-    </div> */}
-    </>
+    <div>
+      <div className="relative h-screen w-full bg-white overflow-hidden dark:bg-black">
+        <div
+          className={cn(
+            "absolute inset-0",
+            "[background-size:20px_20px]",
+            "[background-image:radial-gradient(#d4d4d4_1px,transparent_1px)]",
+            "dark:[background-image:radial-gradient(#404040_1px,transparent_1px)]"
+          )}
+        />
+        <div className="relative z-10 w-2/3 mx-auto p-7">
+          <Navbar />
+          <div className="text-white py-10">
+            <HackerNewsBoard />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -20,6 +20,7 @@ export default function HackerNewsBoard() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const wsRef = useRef<WebSocket | null>(null);
+  const [status, setStatus] = useState<string>('Connecting ..');
 
   const connect = useCallback(() => {
     console.log("WebSocket connecting...");
@@ -28,6 +29,7 @@ export default function HackerNewsBoard() {
 
     socket.onopen = () => {
       console.log("WebSocket connected");
+      setStatus('Connected');
     };
 
     socket.onmessage = (event) => {
@@ -60,11 +62,13 @@ export default function HackerNewsBoard() {
 
     socket.onclose = () => {
       console.log("WebSocket disconnected, reconnecting...");
+      setStatus('Disconnected');
       setTimeout(connect, 1000);
     };
 
     socket.onerror = (err) => {
       console.error("WebSocket error:", err);
+      setStatus('Error');
     };
   }, []);
 
@@ -90,6 +94,7 @@ export default function HackerNewsBoard() {
          <div className="absolute w-5 h-1 rounded-full bg-black top-[62px] left-[45%] z-[-1] blur-sm animate-shadow-scale [animation-delay:0.2s]"></div>
          <div className="absolute w-5 h-1 rounded-full bg-black top-[62px] right-[15%] z-[-1] blur-sm animate-shadow-scale [animation-delay:0.3s]"></div>
        </div>
+       <p>Loading your Articles...</p>
      </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
