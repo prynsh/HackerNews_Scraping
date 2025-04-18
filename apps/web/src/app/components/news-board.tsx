@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from "react";
 
 interface Article {
   title: string;
@@ -10,7 +10,7 @@ interface Article {
 }
 
 interface WebSocketMessage {
-  type: 'initialData' | 'articleUpdate';
+  type: "initialData" | "articleUpdate";
   articles?: Article[];
   recentArticles?: Article[];
   recentArticlesCount?: number;
@@ -20,27 +20,27 @@ export default function HackerNewsBoard() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const wsRef = useRef<WebSocket | null>(null);
-  const [status, setStatus] = useState<string>('Connecting ..');
+  const [status, setStatus] = useState<string>("Connecting ..");
 
   const connect = useCallback(() => {
-    const socket = new WebSocket('ws://localhost:3001');
+    const socket = new WebSocket("ws://localhost:3001");
     wsRef.current = socket;
 
     socket.onopen = () => {
-      setStatus('Connected');
+      setStatus("Connected");
     };
 
     socket.onmessage = (event) => {
       try {
         const data: WebSocketMessage = JSON.parse(event.data);
         switch (data.type) {
-          case 'initialData':
+          case "initialData":
             if (data.recentArticles) {
               setArticles(data.recentArticles);
               setLoading(false);
             }
             break;
-          case 'articleUpdate':
+          case "articleUpdate":
             if (data.articles) {
               const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
               const filteredArticles = data.articles.filter(
@@ -51,21 +51,21 @@ export default function HackerNewsBoard() {
             }
             break;
           default:
-            console.warn('Unknown message type received:', data);
+            console.warn("Unknown message type received:", data);
         }
       } catch (error) {
-        console.error('WebSocket message parsing error:', error);
+        console.error("WebSocket message parsing error:", error);
       }
     };
 
     socket.onclose = () => {
-      setStatus('Disconnected');
+      setStatus("Disconnected");
       setTimeout(connect, 1000);
     };
 
     socket.onerror = (err) => {
       console.error("WebSocket error:", err);
-      setStatus('Error');
+      setStatus("Error");
     };
   }, []);
 
@@ -89,7 +89,9 @@ export default function HackerNewsBoard() {
             <div className="absolute w-4 h-1 md:w-5 md:h-1 rounded-full bg-black top-[52px] md:top-[62px] left-[45%] z-[-1] blur-sm animate-shadow-scale [animation-delay:0.2s]"></div>
             <div className="absolute w-4 h-1 md:w-5 md:h-1 rounded-full bg-black top-[52px] md:top-[62px] right-[15%] z-[-1] blur-sm animate-shadow-scale [animation-delay:0.3s]"></div>
           </div>
-          <p className="text-sm sm:text-base md:text-lg">Loading your Articles...</p>
+          <p className="text-sm sm:text-base md:text-lg">
+            Loading your Articles...
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 ">
@@ -98,7 +100,7 @@ export default function HackerNewsBoard() {
               key={index}
               className="backdrop-blur-lg bg-gradient-to-br from-white/10 to-white/5 dark:from-white/10 dark:to-white/0 border border-black/50 dark:border-white/10 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 p-4 md:p-6"
             >
-              <h3 className="dark:text-white text-black font-semibold mb-3 text-sm sm:text-base md:text-lg lg:text-md leading-snug break-words line-clamp-2">
+              <h3 className="dark:text-white text-black font-semibold mb-3 text-sm sm:text-base md:text-md lg:text-md leading-snug break-words line-clamp-2">
                 <a
                   href={article.link}
                   target="_blank"
@@ -106,8 +108,9 @@ export default function HackerNewsBoard() {
                   className="dark:hover:text-amber-400 hover:text-teal-500 flex items-start gap-2"
                 >
                   {article.title}
-                  <span className="inline-block w-4 h-4 mt-1 dark:text-cyan-400 text-amber-200">
+                  <span className="shrink-0 w-5 h-5 mt-[2px] text-amber-400 dark:text-cyan-400">
                     <svg
+                      className="w-full h-full"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -144,7 +147,9 @@ export default function HackerNewsBoard() {
                   {article.score.replace(" points", "")}
                 </span>
 
-                <span>🕒 {new Date(article.publishedAt).toLocaleTimeString()}</span>
+                <span>
+                  🕒 {new Date(article.publishedAt).toLocaleTimeString()}
+                </span>
 
                 <span className="flex items-center gap-1">
                   <span className="inline-block w-4 h-4 dark:text-green-400 text-teal-500">
